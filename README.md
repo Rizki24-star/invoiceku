@@ -1,4 +1,4 @@
-# WidaTech Technical Test
+# invoiceku
 
 ## Description
 This project is a full-stack application developed using React for the client-side and Node.js for the server-side. The application aims to demonstrate my skills in building responsive and functional web applications.
