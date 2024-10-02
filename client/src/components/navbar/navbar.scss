@@ -1,0 +1,22 @@
+@import "../../global.scss";
+
+.nav {
+  height: 86px;
+  padding: 0px 40px;
+  background-color: $primary-color;
+
+  .brand {
+    font-size: 24px;
+    color: white;
+    font-weight: bold;
+  }
+
+  .user {
+    img {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      object-fit: cover;
+    }
+  }
+}
