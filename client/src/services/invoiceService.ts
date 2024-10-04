@@ -9,6 +9,14 @@ export const getAllInvoices = async () => {
   }
 };
 
+export const getInvoicesByYear = async (year: string) => {
+  try {
+    return await get(`/invoices/${year}`);
+  } catch (error) {
+    throw { message: `Error: ${error}` };
+  }
+};
+
 export const postInvoice = async (req: PostInvoice) => {
   try {
     return await post("/invoices/create", req);

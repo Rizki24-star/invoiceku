@@ -17,6 +17,12 @@ export type PostInvoice = {
   }[];
 };
 
+export type Invoice = {
+  id: number;
+  date: string;
+  total_price: string;
+};
+
 export type InvoiceProducts = {
   id: number;
   customer_name: string;

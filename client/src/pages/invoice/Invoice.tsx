@@ -15,7 +15,6 @@ const InvoicePage = () => {
     getAllInvoices()
       .then((invoices) => {
         setInvoiceProduct(invoices.data);
-        // setSelectedInvoiceProduct(invoices.data[0]);
       })
       .catch((error) => {
         console.log(error);
@@ -42,13 +41,12 @@ const InvoicePage = () => {
             <span>{location.state}</span>
           </div>
         )}
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {invoiceProducts.map((invoice) => (
             <div
               className="p-4 border bg-white shadow-md rounded-md cursor-pointer"
               onClick={() => setSelectedInvoiceProduct(invoice)}
             >
-              {/* {JSON.stringify(invoice)} */}
               <div className="flex flex-col gap-2 ">
                 <div className="flex items-center gap-2">
                   <div className="w-4 h-4 bg-gray-500 rounded-full" />

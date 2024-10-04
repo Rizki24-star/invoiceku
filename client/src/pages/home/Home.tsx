@@ -35,10 +35,7 @@ const HomePage = () => {
         <h1 className="title">Dashboard</h1>
       </div>
 
-      <ChartComponent
-        date={chartData?.dates!}
-        totalPrice={chartData?.totalPrices!}
-      />
+      <ChartComponent />
     </div>
   );
 };
