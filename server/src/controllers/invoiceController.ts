@@ -14,6 +14,19 @@ export const getAllInvoices = async (
   }
 };
 
+export const getInvoicesByYear = async (
+  req: Request,
+  res: Response
+): Promise<void> => {
+  try {
+    const year = Number(req.params.year) || 0;
+    const invoices = await invoiceService.getInvoicesByYear(year);
+    res.status(200).json({ message: "success", data: invoices });
+  } catch (error) {
+    res.status(500).json({ message: "Error getting all invoices", error });
+  }
+};
+
 export const createInvoice = async (
   req: Request,
   res: Response

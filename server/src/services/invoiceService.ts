@@ -57,6 +57,22 @@ export const getAllInvoices = async (): Promise<InvoiceResponse[]> => {
   });
 };
 
+export const getInvoicesByYear = async (year: number) => {
+  return await prisma.invoices.findMany({
+    where: {
+      date: {
+        gt: new Date(year, 0, 1),
+        lt: new Date(year + 1, 0, 1),
+      },
+    },
+    select: {
+      id: true,
+      date: true,
+      total_price: true,
+    },
+  });
+};
+
 export const createInvoice = async (
   invoice: NewInvoice
 ): Promise<Invoices | any> => {
