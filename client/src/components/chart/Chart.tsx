@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import {
   Chart,
   CategoryScale,
@@ -10,7 +10,13 @@ import {
 } from "chart.js";
 import { getInvoicesByYear } from "../../services/invoiceService";
 import { Invoice } from "../../types";
-import { format, getDay, getMonth, getWeekOfMonth } from "date-fns";
+import {
+  format,
+  getDay,
+  getMonth,
+  getWeekOfMonth,
+  getWeeksInMonth,
+} from "date-fns";
 import "./chart.scss";
 import { Bar } from "react-chartjs-2";
 
@@ -26,175 +32,184 @@ type FilterStatus = {
 const months = [
   {
     name: "January",
-    value: "01",
+    value: 1,
   },
   {
     name: "February",
-    value: "02",
+    value: 2,
   },
   {
     name: "March",
-    value: "03",
+    value: 3,
   },
   {
     name: "April",
-    value: "04",
+    value: 4,
   },
   {
     name: "May",
-    value: "05",
+    value: 5,
   },
   {
     name: "June",
-    value: "06",
+    value: 6,
   },
   {
     name: "July",
-    value: "07",
+    value: 7,
   },
   {
     name: "August",
-    value: "08",
+    value: 8,
   },
   {
     name: "September",
-    value: "09",
+    value: 9,
   },
   {
     name: "October",
-    value: "10",
+    value: 10,
   },
   {
     name: "November",
-    value: "11",
+    value: 11,
   },
   {
     name: "December",
-    value: "12",
+    value: 12,
   },
 ];
 
 const weeks = [
   {
     name: "Week 1",
-    value: "1",
+    value: 1,
   },
   {
     name: "Week 2",
-    value: "2",
+    value: 2,
   },
   {
     name: "Week 3",
-    value: "3",
+    value: 3,
   },
   {
     name: "Week 4",
-    value: "4",
+    value: 4,
   },
   {
     name: "Week 5",
-    value: "5",
+    value: 5,
+  },
+  {
+    name: "Week 6",
+    value: 6,
   },
 ];
 
 const days = [
   {
+    name: "Sunday",
+    value: 0,
+  },
+  {
     name: "Monday",
-    value: "1",
+    value: 1,
   },
   {
     name: "Tuesday",
-    value: "2",
+    value: 2,
   },
   {
     name: "Wednesday",
-    value: "3",
+    value: 3,
   },
   {
     name: "Thursday",
-    value: "4",
+    value: 4,
   },
   {
     name: "Friday",
-    value: "5",
+    value: 5,
   },
   {
     name: "Saturday",
-    value: "6",
-  },
-  {
-    name: "Sunday",
-    value: "7",
+    value: 6,
   },
 ];
 
+const filterInvoices = (invoices: Invoice[], filter: FilterStatus) => {
+  return invoices.filter((invoice) => {
+    const date = new Date(invoice.date);
+
+    if (filter.year && format(date, "yyyy") !== filter.year) return false;
+    if (filter.month && format(date, "M") !== filter.month) return false;
+    if (filter.week && getWeekOfMonth(date) !== Number(filter.week))
+      return false;
+
+    return true;
+  });
+};
+
 const ChartComponent: React.FC = () => {
   const [invoices, setInvoices] = useState<Invoice[]>([]);
-  const [filteredInvoices, setFilteredInvoices] = useState<Invoice[]>([]);
-  const [chartLabel, setChartLabel] = useState<string[]>();
-  const [chartData, setChartData] = useState<number[]>();
+  // const [filteredInvoices, setFilteredInvoices] = useState<Invoice[]>([]);
+
   const [filter, setFilter] = useState<FilterStatus>({
     day: "",
     month: "",
     week: "",
-    year: "",
+    year: format(Date.now(), "yyyy"),
   });
 
+  const [chartLabel, setChartLabel] = useState<string[]>();
+  const [chartData, setChartData] = useState<number[]>();
+  const [loading, setLoading] = useState(false);
+
   useEffect(() => {
-    getInvoicesByYear("2024")
+    getInvoicesByYear(filter.year)
       .then((response) => {
         setInvoices(response.data);
-        setFilteredInvoices(response.data);
-        setChartLabel(months.map((month) => month.name));
-        setChartData(groupedPriceByMonth(response.data));
+        groupedPriceByMonth(response.data);
       })
       .catch((error) => {
         console.log(error);
       });
-
-    setFilter({
-      day: "",
-      month: "",
-      week: "",
-      year: format(Date.now(), "yyyy"),
-    });
   }, [filter.year]);
 
-  const handleFilterInvoices = () => {
-    let filtered = invoices;
-
-    if (filter.month && filter.month !== "") {
-      filtered = filtered.filter((invoice) => {
-        return format(new Date(invoice.date), "MM") === filter.month;
-      });
-      groupedPriceByWeek(filtered);
-    } else {
-      setChartLabel(months.map((month) => month.name));
-      setChartData(groupedPriceByMonth(filtered));
-    }
-
-    if (filter.week) {
-      filtered = filtered.filter((invoice) => {
-        const invoiceWeek = getWeekOfMonth(new Date(invoice.date));
-        return invoiceWeek === Number(filter.week);
-      });
-      groupedPriceByDay(filtered);
-    }
-
-    setFilteredInvoices(filtered);
-  };
+  const filteredInvoices = useMemo(() => {
+    return filterInvoices(invoices, filter);
+  }, [invoices, filter]);
 
   useEffect(() => {
-    handleFilterInvoices();
-  }, [filter.month, filter.week, filter.day]);
+    if (filter.week) {
+      groupedPriceByDay(filteredInvoices);
+    } else if (filter.month) {
+      groupedPriceByWeek(filteredInvoices);
+    } else {
+      groupedPriceByMonth(filteredInvoices);
+    }
+  }, [filteredInvoices]);
 
   const handleFilterChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
     const { name, value } = event.target;
-    setFilter((prev) => ({ ...prev, [name]: value }));
+    setFilter((prev) => {
+      if (name === "month" && value === "")
+        return { ...prev, month: "", week: "", day: "" };
+
+      if (name === "week" && value === "")
+        return { ...prev, week: "", day: "" };
+
+      return { ...prev, [name]: value };
+    });
   };
 
-  const groupedPriceByMonth = (invoices: Invoice[]): number[] => {
+  const groupedPriceByMonth = (invoices: Invoice[]) => {
     let groupedPrice = new Map<number, number>();
+    months.map((month) => {
+      groupedPrice.set(Number(month.value), 0);
+    });
+
     for (let i = 0; i < invoices.length; i++) {
       const { date, total_price } = invoices[i];
       const month = getMonth(new Date(date));
@@ -204,25 +219,43 @@ const ChartComponent: React.FC = () => {
       );
     }
 
-    return Array.from(groupedPrice.values()).map((price) => price);
+    setChartLabel(months.map((month) => month.name));
+    setChartData(Array.from(groupedPrice.values()).map((price) => price));
+    // return Array.from(groupedPrice.values()).map((price) => price);
   };
 
   const groupedPriceByWeek = (invoices: Invoice[]) => {
     let groupedPrice = new Map<number, number>();
+
+    const totalWeeks = getWeeksInMonth(
+      new Date(Number(filter.year), Number(filter.month) - 1)
+    );
+
+    const weeks: string[] = [];
+
+    for (let i = 1; i <= totalWeeks; i++) {
+      groupedPrice.set(Number(i), 0);
+      weeks.push(`Week ${i}`);
+    }
+
     for (let i = 0; i < invoices.length; i++) {
       const { date, total_price } = invoices[i];
       const week = getWeekOfMonth(new Date(date));
+
       groupedPrice.set(
         week,
         (groupedPrice.get(week) || 0) + Number(total_price)
       );
     }
-    setChartLabel(weeks.map((week) => week.name));
+    setChartLabel(weeks);
     setChartData(Array.from(groupedPrice.values()).map((price) => price));
   };
 
   const groupedPriceByDay = (invoices: Invoice[]) => {
     let groupedPrice = new Map<number, number>();
+    days.map((day) => {
+      groupedPrice.set(Number(day.value), 0);
+    });
     for (let i = 0; i < invoices.length; i++) {
       const { date, total_price } = invoices[i];
       const day = getDay(new Date(date));
@@ -240,7 +273,8 @@ const ChartComponent: React.FC = () => {
             <option value="2024">2024</option>
           </select>
         </div>
-        {filter.year !== "" && (
+        {filter.year && (
+          // !== ""
           <div className="filter">
             <select
               name="month"
@@ -254,7 +288,8 @@ const ChartComponent: React.FC = () => {
             </select>
           </div>
         )}
-        {filter.month !== "" && (
+        {filter.month && (
+          // !== ""
           <div className="filter">
             <select
               name="week"
@@ -269,31 +304,36 @@ const ChartComponent: React.FC = () => {
           </div>
         )}
       </div>
-      <Bar
-        data={{
-          labels: chartLabel,
-          datasets: [
-            {
-              label: "Income",
-              data: chartData,
-              animation: false,
+      {loading === true ? (
+        <div>Loading...</div>
+      ) : (
+        <Bar
+          data={{
+            labels: chartLabel,
+            datasets: [
+              {
+                label: "Income",
+                data: chartData,
+                animation: false,
 
-              backgroundColor: "rgba(75, 192, 192, 0.6)",
-            },
-          ],
-        }}
-        options={{ responsive: true, plugins: { legend: { position: "top" } } }}
-      />
-      {/* {groupedPriceByMonth().map((item) => (
-        <div>{item}</div>
-      ))} */}
+                backgroundColor: "rgba(75, 192, 192, 0.6)",
+              },
+            ],
+          }}
+          options={{
+            responsive: true,
+            plugins: { legend: { position: "top" } },
+          }}
+        />
+      )}
 
-      <div className="flex flex-wrap gap-2">
+      {/* <div className="flex flex-wrap gap-2">
         {filteredInvoices.map((item) => (
-          <p>{item.total_price}</p>
+          <p>
+            {item.date} {item.total_price} |
+          </p>
         ))}
-      </div>
-      {/* {JSON.stringify(setInvoicesbyMonth())} */}
+      </div> */}
     </div>
   );
 };
