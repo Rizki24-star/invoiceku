@@ -1,5 +1,5 @@
 import { Invoices, Prisma, Products } from "@prisma/client";
-import { prisma } from "../prsima/prisma";
+import { prisma } from "../prisma/prisma";
 import { Decimal } from "@prisma/client/runtime/library";
 
 type NewInvoice = {

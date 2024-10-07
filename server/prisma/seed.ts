@@ -1,4 +1,4 @@
-import { prisma } from "../src/prsima/prisma";
+import { prisma } from "../src/prisma/prisma";
 
 const products = [
   {
