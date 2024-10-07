@@ -3,6 +3,7 @@ import "./home.scss";
 import ChartComponent from "../../components/chart/Chart";
 import { InvoiceProducts } from "../../types";
 import { getAllInvoices } from "../../services/invoiceService";
+import { format } from "date-fns";
 
 const HomePage = () => {
   const [invoiceProducts, setInvoiceProduct] = useState<InvoiceProducts[]>([]);
@@ -35,7 +36,7 @@ const HomePage = () => {
         <h1 className="title">Dashboard</h1>
       </div>
 
-      <ChartComponent />
+      <ChartComponent year={format(Date.now(), "yyyy")} />
     </div>
   );
 };
